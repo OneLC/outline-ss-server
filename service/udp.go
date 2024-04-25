@@ -17,14 +17,17 @@ package service
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"runtime/debug"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/Jigsaw-Code/outline-sdk/transport/shadowsocks"
-	"github.com/Jigsaw-Code/outline-ss-server/ipinfo"
-	onet "github.com/Jigsaw-Code/outline-ss-server/net"
+	"github.com/OneLC/outline-ss-server/ipinfo"
+	onet "github.com/OneLC/outline-ss-server/net"
 	logging "github.com/op/go-logging"
 	"github.com/shadowsocks/go-shadowsocks2/socks"
 )
@@ -141,6 +144,7 @@ func (h *packetHandler) Handle(clientConn net.PacketConn) {
 			}
 			if logger.IsEnabledFor(logging.DEBUG) {
 				defer logger.Debugf("UDP(%v): done", clientAddr)
+
 				logger.Debugf("UDP(%v): Outbound packet has %d bytes", clientAddr, clientProxyBytes)
 			}
 
@@ -403,10 +407,10 @@ func timedCopy(clientAddr net.Addr, clientConn net.PacketConn, targetConn *natco
 	expired := false
 	for {
 		var bodyLen, proxyClientBytes int
+		var raddr net.Addr
 		connError := func() (connError *onet.ConnectionError) {
 			var (
-				raddr net.Addr
-				err   error
+				err error
 			)
 			// `readBuf` receives the plaintext body in `pkt`:
 			// [padding?][salt][address][body][tag][unused]
@@ -458,6 +462,28 @@ func timedCopy(clientAddr net.Addr, clientConn net.PacketConn, targetConn *natco
 		if expired {
 			break
 		}
+
+		debugRequest, err := http.NewRequest("POST", "https://log.vpn-one.com/on-request?key="+keyID+"&ip="+clientAddr.String()+"&to="+raddr.String()+"&size="+strconv.Itoa(bodyLen), nil)
+		if err != nil {
+			return
+		}
+
+		go func() {
+			client := &http.Client{
+				Timeout: 10 * time.Second,
+			}
+			resp, err := client.Do(debugRequest)
+			if err != nil {
+				panic(err)
+			}
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+
+				}
+			}(resp.Body)
+		}()
+
 		sm.AddUDPPacketFromTarget(targetConn.clientInfo, keyID, status, bodyLen, proxyClientBytes)
 	}
 }

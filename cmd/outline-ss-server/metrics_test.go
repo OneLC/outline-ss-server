@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jigsaw-Code/outline-ss-server/ipinfo"
-	"github.com/Jigsaw-Code/outline-ss-server/service/metrics"
+	"github.com/OneLC/outline-ss-server/ipinfo"
+	"github.com/OneLC/outline-ss-server/service/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	promtest "github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/require"
