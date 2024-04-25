@@ -48,7 +48,7 @@ checksum:
   name_template: 'checksums.txt'
 
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  name_template: "1.0-next"
 
 release:
   # This prevents auto-publishing the release. You need to manually publish it.
