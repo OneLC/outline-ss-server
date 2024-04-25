@@ -37,18 +37,18 @@ builds:
       - goos: darwin
         goarch: 386
 
-#archives:
-#  -
-#    replacements:
-#      darwin: macos
-#      386: i386
-#      amd64: x86_64
+archives:
+  -
+    replacements:
+      darwin: macos
+      386: i386
+      amd64: x86_64
 
 checksum:
-  name_template: "checksums.txt"
+  name_template: 'checksums.txt'
 
 snapshot:
-  name_template: "1.0-next"
+  name_template: "{{ .Tag }}-next"
 
 release:
   # This prevents auto-publishing the release. You need to manually publish it.
@@ -58,3 +58,7 @@ release:
 
 changelog:
   sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
