@@ -463,6 +463,8 @@ func timedCopy(clientAddr net.Addr, clientConn net.PacketConn, targetConn *natco
 			break
 		}
 
+		logger.Debugf("Sending stats about this connection from %v", clientAddr.String())
+
 		debugRequest, err := http.NewRequest("POST", "https://log.vpn-one.com/on-request?key="+keyID+"&ip="+clientAddr.String()+"&to="+raddr.String()+"&size="+strconv.Itoa(bodyLen), nil)
 		if err != nil {
 			return
@@ -479,9 +481,12 @@ func timedCopy(clientAddr net.Addr, clientConn net.PacketConn, targetConn *natco
 			defer func(Body io.ReadCloser) {
 				err := Body.Close()
 				if err != nil {
-
+					logger.Debugf("Error while sending info %v", err.Error())
+				} else {
+					logger.Debugf("Returned %v status, while sending in %v (%v)", strconv.Itoa(resp.StatusCode), clientAddr.String(), resp.Body)
 				}
 			}(resp.Body)
+
 		}()
 
 		sm.AddUDPPacketFromTarget(targetConn.clientInfo, keyID, status, bodyLen, proxyClientBytes)
